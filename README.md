@@ -17,7 +17,7 @@ Select text in any Windows program, press **F2**, and hear it read aloud by a ne
 ## Setup
 
 ```bat
-git clone <this-repo-url> TTS
+git clone https://github.com/MTs0ra/offline-tts.git TTS
 cd TTS
 python -m venv .venv
 .venv\Scripts\activate
