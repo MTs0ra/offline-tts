@@ -1,0 +1,22 @@
+# Runtime
+piper-tts>=1.3,<2      # 1.3+ API: PiperVoice.synthesize() yields AudioChunk objects; ships a win_amd64 wheel
+sounddevice>=0.4.6     # PortAudio playback; the Windows wheel bundles the DLL
+pyperclip>=1.8
+kokoro-onnx==0.4.7     # pinned: kokoro-onnx's own newer python_requires would exclude Python 3.14
+# Build only
+pyinstaller>=6.0
+# Benchmark only (scripts/benchmark_kokoro.py)
+psutil>=5.9
+
+# NOT listed here on purpose: onnxruntime-directml (GPU/DirectML support for Kokoro).
+# piper-tts and kokoro-onnx both declare a plain `onnxruntime` dependency, but
+# onnxruntime-directml installs under a *different* distribution name while providing
+# the same `onnxruntime` import - pip's resolver doesn't know one satisfies the other, so
+# listing both here would make a fresh `pip install -r requirements.txt` try to install
+# real `onnxruntime` right on top of onnxruntime-directml's files, silently breaking GPU
+# support. `pip install -r requirements.txt` alone gives you CPU-only, which always works.
+# For GPU (DirectML), run this as a manual step *after* the line above, on its own:
+#   pip uninstall onnxruntime -y
+#   pip install onnxruntime-directml
+# kokoro_backend.py detects at runtime whether that swap was done (falls back to CPU
+# automatically if not, or if DirectML fails to initialize) - see its module docstring.

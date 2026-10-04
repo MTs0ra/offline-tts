@@ -1,0 +1,49 @@
+Voice / model file map for the TTS app
+Update this file whenever a voice or model is added, removed, renamed, or re-labeled.
+File naming scheme: <engine>__<id>__<YYYYMMDD added>.<ext>
+Voice dropdown labels: "<id> — <Engine> v<N>" - v1 = Piper (older), v2 = Kokoro (newer,
+better-sounding, default engine). Kokoro voices are listed first in the dropdown, Piper
+voices below them.
+
+Dropdown label                          | Engine | Ver | Added      | Sounds like
+------------------------------------------------------------------------------------------------
+af_heart — Kokoro v2 (default)          | Kokoro | v2  | 2026-09-11 | American female, Grade A (community ranking) - default voice
+af_bella — Kokoro v2                    | Kokoro | v2  | 2026-09-11 | American female, Grade A-
+af_nicole — Kokoro v2                   | Kokoro | v2  | 2026-09-11 | American female, Grade B-
+af_sarah — Kokoro v2                    | Kokoro | v2  | 2026-09-11 | American female, Grade C
+am_fenrir — Kokoro v2                   | Kokoro | v2  | 2026-09-11 | American male, Grade C+
+am_michael — Kokoro v2                  | Kokoro | v2  | 2026-09-11 | American male, Grade C+
+am_puck — Kokoro v2                     | Kokoro | v2  | 2026-09-11 | American male, Grade C+
+bf_emma — Kokoro v2                     | Kokoro | v2  | 2026-09-11 | British female, Grade B-
+bf_isabella — Kokoro v2                 | Kokoro | v2  | 2026-09-11 | British female, Grade C
+bm_george — Kokoro v2                   | Kokoro | v2  | 2026-09-11 | British male, Grade C
+bm_fable — Kokoro v2                    | Kokoro | v2  | 2026-09-11 | British male, Grade C
+en_US-lessac-medium — Piper v1          | Piper  | v1  | 2026-09-10 | American English, male, neutral/calm narrator tone
+en_US-amy-medium — Piper v1             | Piper  | v1  | 2026-09-10 | American English, female, warm conversational tone
+en_US-ryan-medium — Piper v1            | Piper  | v1  | 2026-09-10 | American English, male, clear neutral tone
+en_GB-jenny_dioco-medium — Piper v1     | Piper  | v1  | 2026-09-10 | British English, female, bright conversational tone
+
+Grades above are from the community VOICES.md ranking, not our own listening - see
+https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md for the full 26-voice list;
+these 11 are the curated subset app.py/kokoro_backend.py's FALLBACK_VOICES exposes.
+
+Underlying files (one file can back several dropdown entries, e.g. all 11 Kokoro voices
+share one model + one voice-bank file):
+
+File name                                            | Added      | Notes
+------------------------------------------------------------------------------------------------
+kokoro__v1.0-fp32__20260911.onnx                     | 2026-09-11 | ACTIVE Kokoro engine model. Switched from int8 on 2026-09-11: measured 3-3.5x faster per sentence (e.g. "Testing hotkey latency.": 1.825s int8 vs 0.549s fp32) - int8's ConvInteger kernel isn't well vectorized on this CPU, so the 3.5x larger fp32 file is faster despite its size.
+kokoro__v1.0-int8__20260911.onnx                     | 2026-09-11 | Kept on disk, no longer the active default (see fp32 row above) - not deleted per this project's "rename/keep, never delete" convention.
+kokoro__voices-v1.0__20260911.bin                    | 2026-09-11 | Kokoro voice bank - backs all 11 "Kokoro v2" entries above (26 voices total inside; 11 curated ones are exposed)
+piper__en_US-lessac-medium__20260910.onnx(.json)     | 2026-09-10 | Backs "en_US-lessac-medium — Piper v1"
+piper__en_US-amy-medium__20260910.onnx(.json)        | 2026-09-10 | Backs "en_US-amy-medium — Piper v1"
+piper__en_US-ryan-medium__20260910.onnx(.json)       | 2026-09-10 | Backs "en_US-ryan-medium — Piper v1"
+piper__en_GB-jenny_dioco-medium__20260910.onnx(.json)| 2026-09-10 | Backs "en_GB-jenny_dioco-medium — Piper v1"
+
+Renamed from their original download names on 2026-09-11 (old -> new), for reference:
+  en_US-lessac-medium.onnx(.json)       -> piper__en_US-lessac-medium__20260910.onnx(.json)
+  en_US-amy-medium.onnx(.json)          -> piper__en_US-amy-medium__20260910.onnx(.json)
+  en_US-ryan-medium.onnx(.json)         -> piper__en_US-ryan-medium__20260910.onnx(.json)
+  en_GB-jenny_dioco-medium.onnx(.json)  -> piper__en_GB-jenny_dioco-medium__20260910.onnx(.json)
+  kokoro-v1.0.int8.onnx                 -> kokoro__v1.0-int8__20260911.onnx
+  voices-v1.0.bin                       -> kokoro__voices-v1.0__20260911.bin

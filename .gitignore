@@ -1,0 +1,44 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python bytecode/cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+
+# PyInstaller build outputs (see build.bat)
+build/
+dist/
+*.spec
+
+# Runtime-generated files
+tts.log
+*.wav
+
+# Voice/model assets - large binaries downloaded per README, not source.
+# Untrack if you'd rather version them; regenerate via README's download steps otherwise.
+voices/
+models/
+
+# Editor/OS cruft
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+
+# Local / personal (not for the public repo)
+CLAUDE.md
+HANDOFF.md
+graphify-out/
+Untitled.jpg
+TTS.zip
+_archive/
+.claude/
+*.local
+.env
+config.local.*
