@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/tts-icon-256.png" alt="TTS app icon" width="128">
+</p>
+
 # TTS
 
 Select text in any Windows program, press **F2**, and hear it read aloud by a neural voice.
@@ -7,6 +11,14 @@ Select text in any Windows program, press **F2**, and hear it read aloud by a ne
   - **Kokoro** (default): Kokoro-82M, a high-quality neural voice, via `kokoro-onnx`. Runs on CPU by default; optional GPU acceleration through DirectML, with automatic CPU fallback.
   - **Piper**: lighter and faster, with a wide range of downloadable voices.
 - Nothing runs at startup or in the background. Close the window and the hotkey is released.
+
+## Changelog
+
+- **App icon redesigned.** The app now uses a custom hexagon icon (`assets/tts-icon.svg`, with `.ico` and 256px PNG exports) for the window, taskbar and `TTS.exe`.
+
+## What's next
+
+I'm working on a new version that combines this text-to-speech app with a speech-to-text component in a single app. This repo stays the TTS-only version for now.
 
 ## Requirements
 
@@ -86,7 +98,7 @@ pip install pyinstaller
 build.bat
 ```
 
-Produces `dist\TTS\TTS.exe`, with `voices\`, `models\` and `icon\` copied beside it. Python is not needed on the target PC.
+Produces `dist\TTS\TTS.exe`, with `voices\`, `models\` and `assets\` copied beside it. Python is not needed on the target PC.
 
 ## Troubleshooting
 

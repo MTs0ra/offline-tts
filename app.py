@@ -225,7 +225,7 @@ class App:
         self._preview_thread: Optional[threading.Thread] = None  # see _select_voice
         self._build_ui()
         root.protocol("WM_DELETE_WINDOW", self._close)
-        set_window_icon(root, app_dir() / "icon" / "tts.ico")
+        set_window_icon(root, app_dir() / "assets" / "tts-icon.ico")
         self._init_voice()
         # Always on, unlike the F2 read-aloud hotkey (which only starts on Start) - this is
         # core window management (see _minimize's docstring), not an opt-in feature.

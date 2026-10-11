@@ -17,9 +17,10 @@ rem --collect-binaries onnxruntime bundles whichever onnxruntime build this venv
 rem has installed - if that's onnxruntime-directml (see requirements.txt), its capi\ folder
 rem holds DirectML.dll alongside the usual onnxruntime.dll/onnxruntime_pybind11_state.pyd,
 rem and it's loaded the same dynamic way those already needed explicit bundling for above.
-rem --icon sets the .exe icon (and so the taskbar/desktop icon) to icon\tts.ico, a speaker
-rem glyph taken from the Windows Sound resources (ddores.dll), not a custom asset.
-pyinstaller --noconfirm --clean --windowed --name TTS --icon icon\tts.ico ^
+rem --icon sets the .exe icon (and so the taskbar/desktop icon) to assets\tts-icon.ico, the
+rem hexagon "TTS" icon (source: assets\tts-icon.svg). The old speaker icon is kept as
+rem icon\tts.ico.bak.
+pyinstaller --noconfirm --clean --windowed --name TTS --icon assets\tts-icon.ico ^
     --collect-data piper --collect-data kokoro_onnx --collect-data phonemizer ^
     --collect-data language_tags --collect-data espeakng_loader --collect-binaries onnxruntime ^
     app.py || exit /b 1
@@ -32,6 +33,6 @@ rem app.py sets the window/taskbar icon at runtime too (ui_widgets.set_window_ic
 rem just via this script's --icon flag above (which only sets the .exe file's own icon
 rem resource - a separate thing from the *window's* icon) - it needs this file to actually
 rem exist next to the exe at runtime to load from.
-if exist icon xcopy /e /i /y icon dist\TTS\icon >nul
+if exist assets xcopy /e /i /y assets dist\TTS\assets >nul
 echo.
 echo Built dist\TTS\TTS.exe
