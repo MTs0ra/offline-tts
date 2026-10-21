@@ -1,10 +1,9 @@
 """TTS: select text anywhere, press F2, hear it. Runs fully offline.
 
 This file is the UI layer only. Synthesis (speech.py, kokoro_backend.py) and the global
-hotkey (hotkey.py) were unchanged by the UI redesign - the UI just drives the same
-Speaker/backend API it always did (speak(), stop(), set_voice(), set_backend()). A later
-responsiveness pass did touch hotkey.py itself (a bounded wait in GlobalHotkey.start())
-alongside this file - see _close(), _select_voice(), _on_hotkey(), and _poll_events().
+hotkey (hotkey.py) sit behind the Speaker/backend API: speak(), stop(), set_voice(),
+set_backend(). See _close(), _select_voice(), _on_hotkey() and _poll_events() for the
+threading rules between the Tk thread and the hotkey and worker threads.
 """
 
 import ctypes
@@ -280,9 +279,9 @@ class App:
         self._root.overrideredirect(True)
 
         self._background = HexGradientBackground(self._canvas, WINDOW_WIDTH, WINDOW_HEIGHT, HEX_WAIST,
-                                                 colors["panel"], colors["outline"])
+                                                 colors["outline"])
         self._background.update(colors["grad_top"], colors["grad_mid"], colors["grad_bottom"],
-                                colors["outline"], colors["panel"])
+                                colors["outline"])
 
         top = WINDOW_HEIGHT * HEX_WAIST
         cx = WINDOW_WIDTH / 2
@@ -561,7 +560,7 @@ class App:
         """
         colors = {key: lerp_color(LIGHT[key], DARK[key], amount) for key in LIGHT}
         self._background.update(colors["grad_top"], colors["grad_mid"], colors["grad_bottom"],
-                                colors["outline"], colors["panel"])
+                                colors["outline"])
 
         cx = WINDOW_WIDTH / 2
 
@@ -769,12 +768,7 @@ class App:
         # synchronously from a canvas click handler crashed every time. Keeping the
         # after_idle deferral here costs nothing and remains a safety margin against that
         # same class of bug if a canvas-based control is ever added back.
-        self._root.after_idle(self._destroy_windows)
-
-    def _destroy_windows(self) -> None:
-        # The settings panel is no longer a separate window (see _build_settings_panel) -
-        # it's embedded in self._canvas, so destroying the root below tears it down too.
-        self._root.destroy()
+        self._root.after_idle(self._root.destroy)
 
 
 def main() -> None:

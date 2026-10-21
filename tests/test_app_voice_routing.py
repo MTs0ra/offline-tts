@@ -36,9 +36,6 @@ class FakeKokoroBackend:
         # cleared here (matching the real backend, which keeps no such history at all).
         self.unloaded = True
 
-    def list_voices(self):
-        return list(kb.FALLBACK_VOICES)
-
     def synthesize(self, text, cancel):
         return iter(())
 

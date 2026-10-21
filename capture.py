@@ -42,20 +42,10 @@ _user32.GetAsyncKeyState.restype = wintypes.SHORT
 _user32.GetClipboardSequenceNumber.restype = wintypes.DWORD
 
 
-def clipboard_text() -> str:
-    return pyperclip.paste()
-
-
 def selection_or_clipboard() -> str:
     """Copy the foreground app's selection. If nothing is copied, return the clipboard unchanged."""
     selection, original = _copy_selection()
     return original if selection is None else selection
-
-
-def selection_only() -> Optional[str]:
-    """Copy the foreground app's selection. Returns None if nothing new was copied (no selection)."""
-    selection, _original = _copy_selection()
-    return selection
 
 
 def _copy_selection() -> Tuple[Optional[str], str]:
@@ -74,8 +64,7 @@ def _copy_selection() -> Tuple[Optional[str], str]:
         return None, original
     time.sleep(0.05)  # the source app may still hold the clipboard open while it finishes writing
     selection = pyperclip.paste()
-    if original:
-        pyperclip.copy(original)
+    pyperclip.copy(original)
     return selection, original
 
 

@@ -66,8 +66,6 @@ def _patch_phonemizer_backend_caching() -> None:
     correctly. Reusing one backend instance across calls removes it; this is applied once,
     at import time, to every KokoroBackend/Kokoro instance in the process.
     """
-    import sys
-
     import phonemizer  # phonemizer/__init__.py does `from .phonemize import phonemize`,
     # which shadows the *submodule* name with that *function* as an attribute of the
     # `phonemizer` package - so `import phonemizer.phonemize as _pm` would silently bind
@@ -115,9 +113,8 @@ def _patch_phonemizer_backend_caching() -> None:
 
 _patch_phonemizer_backend_caching()
 
-# Best-graded English voices (see hexgrad/Kokoro-82M VOICES.md), shown in the UI
-# before the model has finished loading; get_voices() replaces this with the full
-# list (26 voices) once the real voices-v1.0.bin has been read.
+# Best-graded English voices (see hexgrad/Kokoro-82M VOICES.md): the curated subset the
+# UI's Voice list offers (see voices.txt).
 FALLBACK_VOICES = [
     "af_heart", "af_bella", "af_nicole", "af_sarah",
     "am_fenrir", "am_michael", "am_puck",
@@ -361,11 +358,6 @@ class KokoroBackend:
         except Exception as exc:
             print(f"Kokoro warm-up failed: {exc!r}")
             return False
-
-    def list_voices(self) -> List[str]:
-        if self._kokoro is not None:
-            return self._kokoro.get_voices()
-        return list(FALLBACK_VOICES)
 
     def synthesize(self, text: str, cancel: threading.Event) -> Iterator:
         """Yields the opening clause's audio as soon as it's ready, then each following

@@ -117,12 +117,6 @@ class TestKokoroBackendLoad(unittest.TestCase):
         self.assertIs(backend._kokoro, loaded)  # not reconstructed
         self.assertEqual(backend.voice, "af_bella")  # unchanged by a None voice_id
 
-    def test_list_voices_falls_back_before_load(self):
-        backend = kb.KokoroBackend(Path("m"), Path("v"))
-        self.assertEqual(backend.list_voices(), kb.FALLBACK_VOICES)
-        backend.load(kb.DEFAULT_VOICE)
-        self.assertEqual(backend.list_voices(), ["af_heart", "af_bella"])
-
     def test_unload_releases_the_session_and_forces_a_full_reload(self):
         """Memory-reduction check: unload() must actually drop the reference (so the ONNX
         session/model can be garbage-collected) rather than merely resetting a flag - the

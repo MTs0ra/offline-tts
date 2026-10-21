@@ -1,39 +1,17 @@
-"""Presentation-only building blocks for app.py's UI: a hexagonal card (drawn on a canvas
-inside a perfectly normal, OS-managed window), hexagonal buttons, a hover tooltip, and an
-animated day/night toggle. Nothing here touches synthesis or hotkey logic - nothing here
-even imports Speaker/backends.
+"""Presentation-only building blocks for app.py's UI: a hexagonal card drawn on a canvas,
+hexagonal buttons, a hover tooltip, small glyph controls (close, minimize, gear, drag
+handle) and an animated day/night toggle. Nothing here touches synthesis or hotkey logic -
+nothing here even imports Speaker/backends.
 
-This used to make the *window itself* hexagonal via overrideredirect() + -transparentcolor
-click-through masking. That was abandoned after repeated, escalating breakage: Tk gives an
-override-redirect window a separate "wrapper frame" HWND that Explorer's taskbar looks at
-(distinct from the HWND winfo_id() returns), so taskbar presence and the window icon both
-silently failed no matter which handle-manipulation trick was tried; a transparent,
-click-through, custom-dragged window also had no reliable native close affordance, which is
-what previously required a hand-rolled close glyph and drag handler sharing canvas space
-with the gear icon - the actual source of the clicks-get-swallowed bugs. A normal window
-gets a real title bar, a working native close button, automatic taskbar presence, and a
-correct icon entirely for free from the OS - none of that needs reimplementing by hand
-anymore. The hexagon now lives purely as a drawn shape (HexGradientBackground) inside that
-ordinary rectangular window.
+The window is borderless (App._build_ui calls overrideredirect(True)) and keyed
+transparent (-transparentcolor = TRANSPARENT_KEY): HexGradientBackground fills the four
+corner triangles outside the hexagon with that one reserved color, so only the hexagon
+shows. With no native title bar, CloseButton, MinimizeButton and DragHandle replace the
+close, minimize and move controls; each flashes its press color the instant it is pressed.
 
--transparentcolor came back first, scoped much more narrowly than the old attempt: applied
-to this same root, keyed to one fixed, reserved color (TRANSPARENT_KEY) that only
-HexGradientBackground's four corner triangles ever use - so only the rectangle's corners
-outside the hexagon become invisible (and click-through, onto whatever is behind the window -
-that's this attribute's normal behavior, not a bug). CloseButton and DragHandle were added
-as a second close/move affordance *alongside* the still-present native title bar.
-
-overrideredirect() has now come back too, on top of all that - App._build_ui calls it after
-those were already in place and proven working, specifically so the window's own hexagon
-silhouette (no rectangular chrome at all) is the only thing on screen. CloseButton (now the
-*only* close affordance) and MinimizeButton (new - a title bar's minimize has no equivalent
-once the title bar is gone) both flash a press color the instant they're pressed, not on
-release, so a click always gets an immediate visual acknowledgement.
-
-The known tradeoff from before was taskbar presence, tied to override-redirect windows
-getting a separate "wrapper frame" HWND that Explorer's taskbar looks at. See App._build_ui
-and App._minimize's docstrings for what was actually re-confirmed this time and what that
-means for restoring a minimized window.
+Taskbar presence and the window icon go through Tk's separate "wrapper frame" HWND, not
+the one winfo_id() returns - see App._fix_taskbar_presence, App._minimize and
+set_window_icon for what that requires.
 """
 
 import ctypes
@@ -251,10 +229,7 @@ class HexGradientBackground:
     )
     CLOUD_DRIFT = 260      # px each cloud has moved by the time a toggle reaches full dark
 
-    def __init__(self, canvas: tk.Canvas, width: int, height: int, waist: float,
-                 bg_color: Color, outline_color: Color):
-        # bg_color is no longer used for the corners (see class docstring) - kept as a
-        # parameter so call sites don't need to change; harmless if unused.
+    def __init__(self, canvas: tk.Canvas, width: int, height: int, waist: float, outline_color: Color):
         self._canvas = canvas
         self._height = height
         self._stripes = []
@@ -373,11 +348,7 @@ class HexGradientBackground:
         t = max(0.0, min(1.0, y / self._height))
         return _gradient_color(t, top_color, mid_color, bottom_color, self.GRAD_MID_T)
 
-    def update(self, top_color: Color, mid_color: Color, bottom_color: Color,
-               outline_color: Color, bg_color: Color) -> None:
-        # bg_color is accepted (not just dropped) so call sites don't need to change if it's
-        # ever needed again; the corners it used to recolor here are now always
-        # TRANSPARENT_KEY (see __init__), so there's nothing for this method to do with it.
+    def update(self, top_color: Color, mid_color: Color, bottom_color: Color, outline_color: Color) -> None:
         for i, item in enumerate(self._stripes):
             t = i / (self.STRIPES - 1)
             self._canvas.itemconfig(item, fill=_gradient_color(t, top_color, mid_color, bottom_color, self.GRAD_MID_T))
@@ -422,14 +393,9 @@ class HexGradientBackground:
 
 
 def make_app_window(root: tk.Tk, width: int, height: int, bg_color: str) -> tk.Canvas:
-    """A normal, OS-managed top-level window (real title bar, working native close button,
-    automatic taskbar presence) with a plain canvas filling its client area. Deliberately NOT
-    overrideredirect() (the previous approach, see this module's docstring for why): a normal
-    window gets dragging (via its own title bar), closing, a taskbar entry, and an icon
-    entirely for free and reliably from the OS, none of which needed hand-rolled canvas
-    click-routing that could - and repeatedly did - conflict with other things drawn on the
-    same canvas. -transparentcolor is applied separately, by App._build_ui, to this same
-    still-decorated root - see TRANSPARENT_KEY and HexGradientBackground's docstring.
+    """Sizes the window and places a plain canvas filling it. App._build_ui then applies
+    -transparentcolor and overrideredirect(True) to this same root - see TRANSPARENT_KEY and
+    HexGradientBackground's docstring.
     """
     root.geometry(f"{width}x{height}")
     canvas = tk.Canvas(root, width=width, height=height, bg=bg_color, highlightthickness=0, bd=0)
@@ -560,9 +526,6 @@ class CanvasTooltip:
             canvas.tag_bind(item, "<Enter>", self._schedule)
             canvas.tag_bind(item, "<Leave>", self._hide)
 
-    def set_text(self, text: str) -> None:
-        self._text = text
-
     def retheme(self, bg: Color, fg: Color) -> None:
         self._bg, self._fg = bg, fg
 
@@ -594,15 +557,11 @@ class CanvasTooltip:
 
 class DragHandle:
     """A small dot at the hexagon's very top point - dragging it moves the whole window.
-    The native title bar (still present, see make_app_window's docstring) already does
-    this; this is a second, additive way to grab the window that lives on the hexagon's
-    own silhouette instead of the OS chrome above it.
+    It is the only way to move the borderless window (there is no native title bar).
 
-    Uses plain window-geometry dragging (record the mouse's screen position and the
+    Uses plain window-geometry dragging: record the mouse's screen position and the
     window's screen position on press, then re-geometry() the window by the mouse's delta
-    on every drag motion) - the standard Tk technique for a custom drag handle on an
-    ordinary, still-decorated toplevel. Nothing here touches overrideredirect or window
-    styles; it just repositions the same window the title bar's own drag already moves.
+    on every drag motion.
     """
 
     RADIUS = 5
@@ -717,10 +676,9 @@ class _GlyphButton:
 
 
 class CloseButton(_GlyphButton):
-    """An "x" glyph near the hexagon's top-right - now the only way to close the window
-    (see make_app_window's docstring: the native title bar this used to sit alongside is
-    gone). Flashes to press_color (the danger role, by convention for a close control) the
-    instant it's pressed - see _GlyphButton.
+    """An "x" glyph near the hexagon's top-right - the only way to close the window (there is
+    no native title bar). Flashes to press_color (the danger role, by convention for a close
+    control) the instant it's pressed - see _GlyphButton.
     """
 
     def __init__(self, canvas: tk.Canvas, x: float, y: float, color: Color, press_color: Color,
